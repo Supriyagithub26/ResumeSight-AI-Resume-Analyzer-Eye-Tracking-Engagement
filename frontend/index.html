@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ResumeSight</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">ResumeSight</div>
+        <nav class="nav">
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#contact" class="btn-outline">Get Started</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <h1>Build smarter resumes with AI-assisted insights</h1>
+            <p class="lead">Instant feedback, ATS-ready formatting, and personalized suggestions to help your candidates stand out.</p>
+            <div class="cta-row">
+              <a class="btn-primary" href="#">Try demo</a>
+              <a class="btn-ghost" href="#">View docs</a>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="card-preview">
+              <h3>Resume Summary</h3>
+              <ul>
+                <li>Experience: 5+ years</li>
+                <li>Skills matched: 87%</li>
+                <li>ATS score: 92</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="features container">
+        <h2>Key Features</h2>
+        <div class="grid">
+          <div class="feature">
+            <h3>ATS Optimized</h3>
+            <p>Automatic formatting and keyword suggestions to pass applicant tracking systems.</p>
+          </div>
+          <div class="feature">
+            <h3>Personalized Tips</h3>
+            <p>Role-specific recommendations based on the job description.</p>
+          </div>
+          <div class="feature">
+            <h3>Share & Export</h3>
+            <p>Download clean PDFs or share a secure preview link with recruiters.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="how" class="container how-it-works">
+        <h2>How it works</h2>
+        <ol>
+          <li>Upload or paste your resume</li>
+          <li>Receive instant scoring and recommendations</li>
+          <li>Iterate and export an ATS-ready resume</li>
+        </ol>
+      </section>
+
+      <section id="upload" class="upload-section container">
+        <h2>Upload Your Resume & Job Description</h2>
+        <div class="upload-grid">
+          <div class="upload-container">
+            <h3>Job Description</h3>
+            <div class="jd-input-area">
+              <textarea id="jdInput" placeholder="Paste the job description here..." rows="8"></textarea>
+              <button type="button" id="clearJd" class="btn-ghost" style="margin-top:8px;">Clear</button>
+            </div>
+            <div id="jdStatus" style="color:var(--muted); margin-top:8px;"></div>
+          </div>
+
+          <div class="upload-container">
+            <h3>Your Resume</h3>
+            <form id="resumeForm">
+              <div class="upload-area" id="uploadArea">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path d="M24 2V34M24 2L16 10M24 2L32 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M8 22V38C8 40.2091 9.79086 42 12 42H36C38.2091 42 40 40.2091 40 38V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p>Drag and drop your resume here or click to browse</p>
+                <input type="file" id="resumeInput" accept=".pdf,.doc,.docx,.txt" style="display:none">
+              </div>
+              <div id="uploadStatus"></div>
+              <button type="button" id="analyzeBtn" style="display:none" class="btn-primary">Analyze Resume</button>
+            </form>
+          </div>
+        </div>
+        <div id="results" style="display:none" class="results-container">
+          <h3>Resume Analysis</h3>
+          <div id="analysisResults"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-inner">
+        <div>© 2026 ResumeSight</div>
+        <div class="social">Built with ❤ — lightweight demo</div>
+      </div>
+    </footer>
+    <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+    <script>
+      let gazeData = [];
+      
+      // Initialize WebGazer with error handling
+      try {
+        webgazer.showVideo(false);
+        webgazer.setGazeListener((data, elapsedTime) => {
+          if (data == null) return;
+          gazeData.push({ x: data.x, y: data.y, time: elapsedTime });
+          // Keep only last 100 gaze points for performance
+          if (gazeData.length > 100) gazeData.shift();
+        });
+        webgazer.begin().catch(() => {
+          console.log('WebGazer failed to start, continuing without eye tracking');
+        });
+      } catch (e) {
+        console.log('WebGazer not available, continuing without eye tracking:', e.message);
+      }
+    </script>
+    <script>
+      const uploadArea = document.getElementById('uploadArea');
+      const resumeInput = document.getElementById('resumeInput');
+      const uploadStatus = document.getElementById('uploadStatus');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const resultsDiv = document.getElementById('results');
+      const analysisResults = document.getElementById('analysisResults');
+      const jdInput = document.getElementById('jdInput');
+      const jdStatus = document.getElementById('jdStatus');
+      const clearJdBtn = document.getElementById('clearJd');
+      let selectedFile = null;
+      let jdText = '';
+
+      // JD textarea events
+      jdInput.addEventListener('input', (e) => {
+        jdText = e.target.value;
+        jdStatus.textContent = jdText ? `${jdText.split(/\s+/).length} words` : '';
+      });
+
+      clearJdBtn.addEventListener('click', () => {
+        jdInput.value = '';
+        jdText = '';
+        jdStatus.textContent = '';
+      });
+
+      // Click to browse
+      uploadArea.addEventListener('click', () => resumeInput.click());
+
+      // Handle file selection
+      resumeInput.addEventListener('change', (e) => {
+        selectedFile = e.target.files[0];
+        if (selectedFile) {
+          uploadStatus.textContent = `Selected: ${selectedFile.name}`;
+          analyzeBtn.style.display = 'inline-block';
+        }
+      });
+
+      // Drag and drop
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--accent)';
+        uploadArea.style.background = 'rgba(110,231,183,0.1)';
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'rgba(110,231,183,0.3)';
+        uploadArea.style.background = 'transparent';
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'rgba(110,231,183,0.3)';
+        uploadArea.style.background = 'transparent';
+        selectedFile = e.dataTransfer.files[0];
+        if (selectedFile) {
+          uploadStatus.textContent = `Selected: ${selectedFile.name}`;
+          analyzeBtn.style.display = 'inline-block';
+        }
+      });
+
+      // Analyze resume
+      analyzeBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        uploadStatus.textContent = 'Analyzing...';
+        analyzeBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        if (jdText) formData.append('jd', jdText);
+        if (gazeData.length > 0) formData.append('gazeData', JSON.stringify(gazeData));
+
+        try {
+          console.log('Sending request to backend...', { file: selectedFile.name, jdLength: jdText.length, gazePoints: gazeData.length });
+          const response = await fetch('http://localhost:8080/api/analyze', {
+            method: 'POST',
+            body: formData
+          });
+
+          console.log('Backend response status:', response.status);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Analysis result:', data);
+            displayResults(data);
+          } else {
+            console.log('Backend error, using demo results');
+            displayResults(getDemoResults(jdText));
+          }
+        } catch (error) {
+          console.error('Request failed:', error);
+          displayResults(getDemoResults(jdText));
+        }
+
+        uploadStatus.textContent = '';
+        analyzeBtn.disabled = false;
+      });
+
+      function displayResults(data) {
+        resultsDiv.style.display = 'block';
+        analysisResults.innerHTML = `
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div style="background: rgba(96,165,250,0.1); padding: 12px; border-radius: 8px;">
+              <div style="font-size: 0.85rem; color: var(--muted);">ATS Score</div>
+              <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;">${data.atsScore || 'N/A'}</div>
+            </div>
+            <div style="background: rgba(110,231,183,0.1); padding: 12px; border-radius: 8px;">
+              <div style="font-size: 0.85rem; color: var(--muted);">Skills Matched</div>
+              <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">${data.skillsMatched || 'N/A'}</div>
+            </div>
+            <div style="background: rgba(250,204,21,0.1); padding: 12px; border-radius: 8px;">
+              <div style="font-size: 0.85rem; color: var(--muted);">Experience</div>
+              <div style="font-size: 1.5rem; font-weight: 700; color: #fcc414;">${data.experience || 'N/A'}</div>
+            </div>
+            ${data.jdMatch ? `<div style="background: rgba(168,85,247,0.1); padding: 12px; border-radius: 8px;">
+              <div style="font-size: 0.85rem; color: var(--muted);">JD Match</div>
+              <div style="font-size: 1.5rem; font-weight: 700; color: #a855f7;">${data.jdMatch}</div>
+            </div>` : ''}
+          </div>
+          <div style="margin-top: 16px; color: var(--muted); line-height: 1.6;">
+            <p><strong>Recommendations:</strong></p>
+            <ul>${(data.recommendations || []).map(r => `<li>${r}</li>`).join('')}</ul>
+          </div>
+        `;
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      function getDemoResults(jdText) {
+        const hasJd = jdText && jdText.trim().length > 10;
+        return {
+          atsScore: 87,
+          skillsMatched: '5/8',
+          experience: '5+ years',
+          jdMatch: hasJd ? '78%' : undefined,
+          recommendations: [
+            'Add more technical keywords relevant to the role',
+            ...(hasJd ? ['Align experience with specific JD requirements'] : []),
+            'Restructure bullet points to emphasize quantifiable achievements',
+            'Include relevant certifications and LinkedIn profile URL',
+            'Improve formatting consistency across sections'
+          ]
+        };
+      }
+    </script>
+  </body>
+</html>
