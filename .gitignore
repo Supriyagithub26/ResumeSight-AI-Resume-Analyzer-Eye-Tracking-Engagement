@@ -1,0 +1,41 @@
+# Java / Maven
+/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Eclipse/IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+
+# Python
+__pycache__/
+.venv/
+venv/
+ENV/
+env/
+*.pyc
+
+# VSCode
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node (if added later)
+node_modules/
+
+# Logs
+*.log
+
+# Temporary files
+*.swp
+*.tmp
+target/
+.idea/
